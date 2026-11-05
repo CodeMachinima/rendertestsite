@@ -1,9 +1,12 @@
 const http = require('node:http');
+const https = require('node:https');
 const fs = require('node:fs');
 const path = require('node:path');
 
 const root = __dirname;
-const port = Number(process.env.PORT) || 8080;
+const secure = process.argv.includes('--https');
+const port = Number(process.env.PORT) || (secure ? 8443 : 8080);
+const certificateDirectory = path.join(root, 'certs');
 const types = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -11,7 +14,7 @@ const types = {
   '.json': 'application/json; charset=utf-8'
 };
 
-const server = http.createServer((request, response) => {
+const serveFile = (request, response) => {
   const requestPath = decodeURIComponent(request.url.split('?')[0]);
   const requestedFile = requestPath === '/' ? 'index.html' : requestPath.slice(1);
   const filePath = path.resolve(root, requestedFile);
@@ -32,8 +35,23 @@ const server = http.createServer((request, response) => {
     response.writeHead(200, { 'Content-Type': types[path.extname(filePath)] || 'application/octet-stream' });
     response.end(data);
   });
-});
+};
 
-server.listen(port, () => {
-  console.log(`Signal Keyboard is running at http://localhost:${port}`);
+let server;
+if (secure) {
+  const keyPath = path.join(certificateDirectory, 'localhost-key.pem');
+  const certificatePath = path.join(certificateDirectory, 'localhost-cert.pem');
+  if (!fs.existsSync(keyPath) || !fs.existsSync(certificatePath)) {
+    console.error('HTTPS certificate files are missing. Run `npm run cert` first.');
+    process.exit(1);
+  }
+  server = https.createServer({ key: fs.readFileSync(keyPath), cert: fs.readFileSync(certificatePath) }, serveFile);
+} else {
+  server = http.createServer(serveFile);
+}
+
+server.listen(port, '0.0.0.0', () => {
+  const protocol = secure ? 'https' : 'http';
+  console.log(`Signal Keyboard is running at ${protocol}://localhost:${port}`);
+  if (secure) console.log(`For another computer, use https://<this-computer-lan-ip>:${port}`);
 });
