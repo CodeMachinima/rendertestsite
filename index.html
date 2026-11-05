@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signal Keyboard · Sender</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="sender">
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="index.html" aria-label="Signal Keyboard home">
+          <span class="brand-mark">♪</span>
+          <span>Signal Keyboard</span>
+        </a>
+        <nav class="page-nav" aria-label="Pages">
+          <a class="active" href="index.html">Sender</a>
+          <a href="receiver.html">Receiver</a>
+        </nav>
+      </header>
+
+      <section class="hero">
+        <div>
+          <p class="eyebrow">PAGE 01 · MIDI-LIKE INPUT</p>
+          <h1>Send a note<br /><em>into the room.</em></h1>
+          <p class="lede">Play the keyboard below, or use your computer keys. This page sends note events; the receiver tab turns them into sound.</p>
+        </div>
+        <div class="status-card">
+          <span class="status-dot"></span>
+          <div><strong>Broadcast ready</strong><span>Waiting for your first note</span></div>
+        </div>
+      </section>
+
+      <section class="instrument-panel" aria-labelledby="keyboard-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">LIVE INSTRUMENT</p>
+            <h2 id="keyboard-heading">A minor / 2 octaves</h2>
+          </div>
+          <div class="shortcut"><span>Computer keys</span><kbd>A</kbd><kbd>W</kbd><kbd>S</kbd><kbd>E</kbd><kbd>D</kbd><kbd>F</kbd></div>
+        </div>
+        <div class="keyboard-wrap">
+          <div class="keyboard" id="keyboard" role="group" aria-label="Interactive piano keyboard"></div>
+        </div>
+        <div class="keyboard-footer"><span>Click or press a key</span><span class="octave-label">C3 — C5</span><span>Receiver hears the sound</span></div>
+      </section>
+
+      <section class="instructions">
+        <div class="step"><span>01</span><p><strong>Open the receiver</strong><br />Keep this tab open and launch the second page.</p></div>
+        <div class="step"><span>02</span><p><strong>Play the keyboard</strong><br />Hold multiple keys for a full chord.</p></div>
+        <div class="step"><span>03</span><p><strong>Hear the signal</strong><br />The receiver renders every note in real time.</p></div>
+      </section>
+
+      <footer><span>Web Audio API + BroadcastChannel</span><a href="receiver.html">Go to receiver →</a></footer>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

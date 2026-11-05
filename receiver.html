@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signal Keyboard · Receiver</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="receiver">
+    <main class="shell receiver-shell">
+      <header class="topbar">
+        <a class="brand" href="index.html" aria-label="Signal Keyboard home"><span class="brand-mark">♪</span><span>Signal Keyboard</span></a>
+        <nav class="page-nav" aria-label="Pages"><a href="index.html">Sender</a><a class="active" href="receiver.html">Receiver</a></nav>
+      </header>
+      <section class="receiver-hero">
+        <div><p class="eyebrow">PAGE 02 · AUDIO OUTPUT</p><h1>Listen to the<br /><em>signal.</em></h1><p class="lede">This tab receives every note from the sender and turns it into a warm, polyphonic synth voice.</p></div>
+        <div class="audio-toggle" id="audio-toggle"><span class="status-dot"></span><span><strong id="audio-status">Audio is off</strong><small>Click anywhere to enable</small></span></div>
+      </section>
+      <section class="receiver-card">
+        <div class="receiver-card-top"><div><p class="eyebrow">NOW PLAYING</p><h2 id="note-display">—</h2></div><div class="signal-bars" aria-label="Signal activity"><i></i><i></i><i></i><i></i><i></i></div></div>
+        <div class="note-orbit" id="note-orbit"><span class="orbit-ring ring-one"></span><span class="orbit-ring ring-two"></span><span class="orbit-core">♪</span></div>
+        <div class="active-notes" id="active-notes"><span class="empty-state">Waiting for a note from the sender…</span></div>
+      </section>
+      <section class="receiver-info"><span class="pulse"></span><p><strong>Listening for broadcast</strong><br />Open <a href="index.html">the sender</a> in another tab, then play a chord.</p></section>
+      <footer><span>Polyphonic oscillator · sine wave</span><a href="index.html">← Back to sender</a></footer>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
