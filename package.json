@@ -1,0 +1,9 @@
+{
+  "name": "signal-keyboard-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A two-page polyphonic keyboard and Web Audio receiver demo",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
