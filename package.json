@@ -5,7 +5,7 @@
   "description": "A two-page polyphonic keyboard and Web Audio receiver demo",
   "scripts": {
     "cert": "mkdir -p certs && LAN_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo 127.0.0.1) && openssl req -x509 -newkey rsa:2048 -nodes -keyout certs/localhost-key.pem -out certs/localhost-cert.pem -days 365 -subj \"/CN=localhost\" -addext \"subjectAltName=DNS:localhost,IP:127.0.0.1,IP:$LAN_IP\"",
-    "start": "node server.js --https",
-    "start:http": "node server.js"
+    "start": "node server.js",
+    "start:https": "node server.js --https"
   }
 }
