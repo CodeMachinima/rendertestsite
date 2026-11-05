@@ -8,6 +8,8 @@ const seenMessages = new Set();
 log('Initializing page', { url: window.location.href, channel: CHANNEL_NAME });
 
 let bus = null;
+let socket = null;
+let socketDeliver = null;
 try {
   if ('BroadcastChannel' in window) {
     bus = new BroadcastChannel(CHANNEL_NAME);
@@ -19,6 +21,32 @@ try {
   error('Could not create BroadcastChannel; using localStorage fallback', cause);
 }
 
+const connectWebSocket = () => {
+  if (!['http:', 'https:'].includes(window.location.protocol)) {
+    warn('WebSocket relay is unavailable on a file:// page; use the Render URL for cross-computer play');
+    return;
+  }
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const endpoint = `${protocol}//${window.location.host}/ws`;
+  try {
+    socket = new WebSocket(endpoint);
+    log('Connecting to network relay', endpoint);
+    socket.addEventListener('open', () => log('Network relay connected', { endpoint }));
+    socket.addEventListener('message', event => {
+      if (socketDeliver) socketDeliver(event.data, 'WebSocket');
+      else log('Network message received before listeners were ready', event.data);
+    });
+    socket.addEventListener('error', cause => error('Network relay error', cause));
+    socket.addEventListener('close', event => {
+      warn('Network relay disconnected', { code: event.code, reason: event.reason || 'none' });
+      window.setTimeout(connectWebSocket, 3000);
+    });
+  } catch (cause) {
+    error('Could not create WebSocket connection', cause);
+  }
+};
+connectWebSocket();
+
 const send = message => {
   const packet = { ...message, at: Date.now(), from: pageRole, id: `${pageRole}-${Date.now()}-${Math.random().toString(36).slice(2)}` };
   log('Sending message', packet);
@@ -29,6 +57,16 @@ const send = message => {
     } catch (cause) {
       error('BroadcastChannel postMessage failed', cause);
     }
+  }
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    try {
+      socket.send(JSON.stringify(packet));
+      log('WebSocket relay message sent');
+    } catch (cause) {
+      error('WebSocket relay send failed', cause);
+    }
+  } else {
+    warn('WebSocket relay is not open; message was sent only to local fallbacks', { readyState: socket?.readyState });
   }
   try {
     localStorage.setItem(CHANNEL_NAME, JSON.stringify(packet));
@@ -63,6 +101,8 @@ const subscribe = handler => {
     bus.onmessage = event => deliver(event.data, 'BroadcastChannel');
     log('Listening on BroadcastChannel');
   }
+  socketDeliver = deliver;
+  log('Listening on WebSocket relay');
   window.addEventListener('storage', event => {
     if (event.key !== CHANNEL_NAME || !event.newValue) return;
     deliver(event.newValue, 'localStorage');

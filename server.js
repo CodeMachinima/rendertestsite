@@ -2,6 +2,7 @@ const http = require('node:http');
 const https = require('node:https');
 const fs = require('node:fs');
 const path = require('node:path');
+const { WebSocketServer, WebSocket } = require('ws');
 
 const root = __dirname;
 const secure = process.argv.includes('--https');
@@ -54,4 +55,28 @@ server.listen(port, '0.0.0.0', () => {
   const protocol = secure ? 'https' : 'http';
   console.log(`Signal Keyboard is running at ${protocol}://localhost:${port}`);
   if (secure) console.log(`For another computer, use https://<this-computer-lan-ip>:${port}`);
+});
+
+const webSocketServer = new WebSocketServer({ noServer: true });
+
+webSocketServer.on('connection', client => {
+  console.log('WebSocket client connected');
+  client.on('close', () => console.log('WebSocket client disconnected'));
+  client.on('error', cause => console.error('WebSocket client error', cause));
+  client.on('message', data => {
+    console.log('Relaying WebSocket message', data.toString());
+    for (const peer of webSocketServer.clients) {
+      if (peer !== client && peer.readyState === WebSocket.OPEN) peer.send(data);
+    }
+  });
+});
+
+server.on('upgrade', (request, socket, head) => {
+  if (request.url !== '/ws') {
+    socket.destroy();
+    return;
+  }
+  webSocketServer.handleUpgrade(request, socket, head, client => {
+    webSocketServer.emit('connection', client, request);
+  });
 });
