@@ -45,6 +45,12 @@
         <div class="keyboard-footer"><span>Click or press a key</span><span class="octave-label">C3 — C5</span><span>Receiver hears the sound</span></div>
       </section>
 
+      <section class="sequencer" aria-labelledby="sequencer-heading">
+        <div class="sequencer-heading"><div><p class="eyebrow">PATTERN MACHINE</p><h2 id="sequencer-heading">Build a little loop</h2></div><div class="sequencer-actions"><label class="tempo"><span>BPM</span><output id="tempo-value">108</output><input id="tempo-control" type="range" min="50" max="180" value="108" /></label><button class="play-button" id="sequencer-toggle" type="button">Play sequence</button></div></div>
+        <div class="step-grid" id="step-grid" aria-label="Eight-step sequencer"></div>
+        <div class="sequencer-footer"><span>Each step sends one note to the receiver</span><span id="sequencer-status">Ready to sequence</span></div>
+      </section>
+
       <section class="instructions">
         <div class="step"><span>01</span><p><strong>Open the receiver</strong><br />Keep this tab open and launch the second page.</p></div>
         <div class="step"><span>02</span><p><strong>Play the keyboard</strong><br />Hold multiple keys for a full chord.</p></div>

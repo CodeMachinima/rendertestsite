@@ -180,6 +180,82 @@ if (keyboard) {
   });
 }
 
+if (pageRole === 'sender') {
+  const stepGrid = document.querySelector('#step-grid');
+  const toggle = document.querySelector('#sequencer-toggle');
+  const tempoControl = document.querySelector('#tempo-control');
+  const tempoValue = document.querySelector('#tempo-value');
+  const sequenceStatus = document.querySelector('#sequencer-status');
+  const stepNotes = [...notes, ...blackNotes.map(item => item.slice(0, 3))].sort((a, b) => a[1] - b[1]);
+  const pattern = [48, 52, 55, 60, 55, 52, 48, 55];
+  const stepElements = [];
+  let isPlaying = false;
+  let currentStep = -1;
+  let sequenceTimer;
+  let noteOffTimer;
+  let sequenceMidi;
+
+  const makeOptions = selectedMidi => stepNotes.map(item => `<option value="${item[1]}"${item[1] === selectedMidi ? ' selected' : ''}>${item[0]}</option>`).join('');
+  for (let index = 0; index < 8; index += 1) {
+    const step = document.createElement('label');
+    step.className = 'step';
+    step.innerHTML = `<span class="step-number">0${index + 1}</span><select aria-label="Step ${index + 1} note">${makeOptions(pattern[index])}</select>`;
+    stepGrid.appendChild(step);
+    stepElements.push(step);
+  }
+
+  const clearCurrentStep = () => {
+    stepElements.forEach(step => step.classList.remove('current'));
+  };
+  const stopSequenceNote = () => {
+    if (sequenceMidi === undefined) return;
+    send({ type: 'noteoff', note: stepNotes.find(item => item[1] === sequenceMidi)?.[0] || 'unknown', midi: sequenceMidi });
+    sequenceMidi = undefined;
+  };
+  const tick = () => {
+    if (!isPlaying) return;
+    stopSequenceNote();
+    clearTimeout(noteOffTimer);
+    currentStep = (currentStep + 1) % stepElements.length;
+    const select = stepElements[currentStep].querySelector('select');
+    sequenceMidi = Number(select.value);
+    const note = stepNotes.find(item => item[1] === sequenceMidi);
+    stepElements[currentStep].classList.add('current');
+    send({ type: 'noteon', note: note[0], midi: sequenceMidi });
+    sequenceStatus.textContent = `Playing step ${currentStep + 1} · ${note[0]}`;
+    const beatLength = 60000 / Number(tempoControl.value);
+    noteOffTimer = window.setTimeout(stopSequenceNote, beatLength * 0.82);
+    sequenceTimer = window.setTimeout(tick, beatLength);
+  };
+  const stopSequence = () => {
+    isPlaying = false;
+    clearTimeout(sequenceTimer);
+    clearTimeout(noteOffTimer);
+    stopSequenceNote();
+    clearCurrentStep();
+    toggle.textContent = 'Play sequence';
+    toggle.classList.remove('playing');
+    sequenceStatus.textContent = 'Ready to sequence';
+  };
+  toggle.addEventListener('click', () => {
+    if (isPlaying) {
+      stopSequence();
+      log('Sequencer stopped');
+      return;
+    }
+    isPlaying = true;
+    currentStep = -1;
+    toggle.textContent = 'Stop sequence';
+    toggle.classList.add('playing');
+    log('Sequencer started', { bpm: tempoControl.value });
+    tick();
+  });
+  tempoControl.addEventListener('input', () => {
+    tempoValue.textContent = tempoControl.value;
+    if (isPlaying) log('Sequencer tempo changed', { bpm: tempoControl.value });
+  });
+}
+
 if (pageRole === 'receiver') {
   const active = new Map();
   const audioButton = document.querySelector('#audio-toggle');
