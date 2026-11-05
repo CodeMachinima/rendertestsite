@@ -32,9 +32,14 @@ const connectWebSocket = () => {
     socket = new WebSocket(endpoint);
     log('Connecting to network relay', endpoint);
     socket.addEventListener('open', () => log('Network relay connected', { endpoint }));
-    socket.addEventListener('message', event => {
-      if (socketDeliver) socketDeliver(event.data, 'WebSocket');
-      else log('Network message received before listeners were ready', event.data);
+    socket.addEventListener('message', async event => {
+      try {
+        const payload = event.data instanceof Blob ? await event.data.text() : event.data;
+        if (socketDeliver) socketDeliver(payload, 'WebSocket');
+        else log('Network message received before listeners were ready', payload);
+      } catch (cause) {
+        error('Could not decode WebSocket message', cause);
+      }
     });
     socket.addEventListener('error', cause => error('Network relay error', cause));
     socket.addEventListener('close', event => {

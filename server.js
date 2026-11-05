@@ -64,9 +64,10 @@ webSocketServer.on('connection', client => {
   client.on('close', () => console.log('WebSocket client disconnected'));
   client.on('error', cause => console.error('WebSocket client error', cause));
   client.on('message', data => {
-    console.log('Relaying WebSocket message', data.toString());
+    const message = data.toString();
+    console.log('Relaying WebSocket message', message);
     for (const peer of webSocketServer.clients) {
-      if (peer !== client && peer.readyState === WebSocket.OPEN) peer.send(data);
+      if (peer !== client && peer.readyState === WebSocket.OPEN) peer.send(message);
     }
   });
 });
