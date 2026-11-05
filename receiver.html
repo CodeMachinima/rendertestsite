@@ -21,6 +21,16 @@
         <div class="note-orbit" id="note-orbit"><span class="orbit-ring ring-one"></span><span class="orbit-ring ring-two"></span><span class="orbit-core">♪</span></div>
         <div class="active-notes" id="active-notes"><span class="empty-state">Waiting for a note from the sender…</span></div>
       </section>
+      <section class="synth-controls" aria-labelledby="synth-heading">
+        <div class="controls-heading"><div><p class="eyebrow">SOUND DESIGN</p><h2 id="synth-heading">Shape the voice</h2></div><span class="control-hint">Changes apply live</span></div>
+        <div class="control-grid">
+          <label class="control select-control"><span>Waveform</span><select id="waveform-control"><option value="sine">Sine</option><option value="triangle">Triangle</option><option value="sawtooth">Sawtooth</option><option value="square">Square</option></select></label>
+          <label class="control"><span>Volume <output id="volume-value">20%</output></span><input id="volume-control" type="range" min="0" max="0.5" step="0.01" value="0.2" /></label>
+          <label class="control"><span>Attack <output id="attack-value">25 ms</output></span><input id="attack-control" type="range" min="0.005" max="1" step="0.005" value="0.025" /></label>
+          <label class="control"><span>Release <output id="release-value">150 ms</output></span><input id="release-control" type="range" min="0.03" max="1.5" step="0.01" value="0.15" /></label>
+          <label class="control wide-control"><span>Filter cutoff <output id="cutoff-value">8.0 kHz</output></span><input id="cutoff-control" type="range" min="300" max="12000" step="100" value="8000" /></label>
+        </div>
+      </section>
       <section class="receiver-info"><span class="pulse"></span><p><strong>Listening for broadcast</strong><br />Open <a href="index.html">the sender</a> in another tab, then play a chord.</p></section>
       <footer><span>Polyphonic oscillator · sine wave</span><a href="index.html">← Back to sender</a></footer>
     </main>

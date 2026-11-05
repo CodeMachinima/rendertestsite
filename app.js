@@ -184,7 +184,41 @@ if (pageRole === 'receiver') {
   const active = new Map();
   const audioButton = document.querySelector('#audio-toggle');
   const audioStatus = document.querySelector('#audio-status');
+  const synth = { waveform: 'sine', volume: 0.2, attack: 0.025, release: 0.15, cutoff: 8000 };
   let audio;
+  let masterGain;
+  let masterFilter;
+
+  const wireSynthControls = () => {
+    const waveform = document.querySelector('#waveform-control');
+    const volume = document.querySelector('#volume-control');
+    const attack = document.querySelector('#attack-control');
+    const release = document.querySelector('#release-control');
+    const cutoff = document.querySelector('#cutoff-control');
+    const volumeValue = document.querySelector('#volume-value');
+    const attackValue = document.querySelector('#attack-value');
+    const releaseValue = document.querySelector('#release-value');
+    const cutoffValue = document.querySelector('#cutoff-value');
+
+    const update = () => {
+      synth.waveform = waveform.value;
+      synth.volume = Number(volume.value);
+      synth.attack = Number(attack.value);
+      synth.release = Number(release.value);
+      synth.cutoff = Number(cutoff.value);
+      volumeValue.textContent = `${Math.round(synth.volume * 100)}%`;
+      attackValue.textContent = `${Math.round(synth.attack * 1000)} ms`;
+      releaseValue.textContent = `${Math.round(synth.release * 1000)} ms`;
+      cutoffValue.textContent = synth.cutoff >= 1000 ? `${(synth.cutoff / 1000).toFixed(1)} kHz` : `${synth.cutoff} Hz`;
+      if (masterGain) masterGain.gain.setTargetAtTime(synth.volume, audio.currentTime, 0.015);
+      if (masterFilter) masterFilter.frequency.setTargetAtTime(synth.cutoff, audio.currentTime, 0.015);
+      active.forEach(voice => { voice.osc.type = synth.waveform; });
+      log('Synth controls changed', { ...synth });
+    };
+    [waveform, volume, attack, release, cutoff].forEach(control => control.addEventListener('input', update));
+    update();
+  };
+
   const startAudio = () => {
     try {
       if (!audio) {
@@ -192,6 +226,14 @@ if (pageRole === 'receiver') {
         if (!AudioContextClass) throw new Error('Web Audio API is unavailable in this browser');
         audio = new AudioContextClass();
         log('AudioContext created', { state: audio.state, sampleRate: audio.sampleRate });
+        masterGain = audio.createGain();
+        masterFilter = audio.createBiquadFilter();
+        masterFilter.type = 'lowpass';
+        masterFilter.frequency.value = synth.cutoff;
+        masterFilter.Q.value = 0.7;
+        masterGain.gain.value = synth.volume;
+        masterGain.connect(masterFilter).connect(audio.destination);
+        log('Synth output chain created', { waveform: synth.waveform, volume: synth.volume, cutoff: synth.cutoff });
       }
       if (audio.state === 'suspended') {
         log('AudioContext is suspended; requesting resume');
@@ -206,6 +248,7 @@ if (pageRole === 'receiver') {
       audioButton.querySelector('small').textContent = 'Check browser permissions';
     }
   };
+  wireSynthControls();
   const render = () => {
     const list = document.querySelector('#active-notes');
     list.innerHTML = active.size ? [...active.values()].map(item => `<span class="active-note">${item.note}</span>`).join('') : '<span class="empty-state">Waiting for a note from the sender…</span>';
@@ -233,19 +276,19 @@ if (pageRole === 'receiver') {
       if (active.has(message.midi)) { warn('Ignoring duplicate note-on', message); return; }
       const osc = audio.createOscillator();
       const gain = audio.createGain();
-      osc.type = 'sine';
+      osc.type = synth.waveform;
       osc.frequency.value = 440 * Math.pow(2, (message.midi - 69) / 12);
       gain.gain.setValueAtTime(0.0001, audio.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.2, audio.currentTime + 0.025);
-      osc.connect(gain).connect(audio.destination);
+      gain.gain.exponentialRampToValueAtTime(1, audio.currentTime + synth.attack);
+      osc.connect(gain).connect(masterGain);
       osc.start();
       active.set(message.midi, { note: message.note, osc, gain });
       log('Started oscillator', { note: message.note, midi: message.midi, frequency: osc.frequency.value });
     } else if (active.has(message.midi)) {
       const voice = active.get(message.midi);
       voice.gain.gain.cancelScheduledValues(audio.currentTime);
-      voice.gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.15);
-      voice.osc.stop(audio.currentTime + 0.16);
+      voice.gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + synth.release);
+      voice.osc.stop(audio.currentTime + synth.release + 0.01);
       active.delete(message.midi);
       log('Stopped oscillator', { note: message.note, midi: message.midi });
     } else {
